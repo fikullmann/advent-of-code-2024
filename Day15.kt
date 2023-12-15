@@ -1,86 +1,34 @@
-import Boxes.Companion.hash
 import java.io.File
-import java.util.Dictionary
-import java.util.TreeMap
 
 fun main() {
-    val splitInput = File("input/15").readLines()[0].split(',')
-    day15Part2(splitInput)
+    Day15.part1().let(::println)
+    Day15.part2().let(::println)
 }
+object Day15: Day() {
+    val input = File("input/15").readLines()[0].split(',')
 
-fun day15Part1(input: List<String>) {
-    val boxes = Boxes()
-    val results = mutableListOf<Int>()
-    input.forEach {str ->
-        results.add(hash(str))
-    }
-    println(results.sum())
-}
-
-class Boxes() {
-    var boxes: MutableMap<Int, MutableList<Lens>> = TreeMap()
-    companion object {
-        fun hash(str: String): Int {
-            var value = 0
-            str.forEach {ch ->
-                value += ch.code
-                value *= 17
-                value %= 256
-            }
-            return value
+    private fun hash(str: String): Int = str.fold(0) { acc, ch ->
+            (acc + ch.code) * 17 % 256
         }
 
-    }
-    fun inputSequence(str: String) {
-
-        if (str.contains('-')) {
-            val splitString = str.split('-')
-            val boxInput = Lens(splitString[0], -1)
-            boxes[boxInput.hashCode()]?.removeIf {
-                str.dropLast(1) == it.id
-            }
-        } else {
-            val splitString = str.split('=')
-            val boxInput = Lens(splitString[0], splitString[1].toInt())
-            if (boxes.containsKey(boxInput.hashCode())) {
-                if (boxes[boxInput.hashCode()]?.map { it.id }?.contains(boxInput.id) == true) {
-                    boxes[boxInput.hashCode()]?.replaceAll {
-                        if (it.id == boxInput.id) boxInput else it
-                    }
-                } else {
-                    boxes[boxInput.hashCode()]?.add(boxInput)!!
-                }
-            } else {
-                boxes[boxInput.hashCode()] = mutableListOf(boxInput)
-            }
+    override fun part1():Int {
+        val results = mutableListOf<Int>()
+        input.forEach { str ->
+            results.add(hash(str))
         }
+        return results.sum()
     }
-}
-class Lens(val id: String, val focalLength: Int) {
-    override fun hashCode(): Int {
-        var value = 0
-        id.forEach {ch ->
-            value += ch.code
-            value *= 17
-            value %= 256
-        }
-        return value
-    }
-
-}
-
-fun day15Part2(input: List<String>) {
-    val boxes = Boxes()
-    input.forEach { str ->
-        boxes.inputSequence(str)
-    }
-    println(boxes.boxes.map {entry: Map.Entry<Int, MutableList<Lens>> ->
-        val boxNr = entry.key + 1
-        entry.value.mapIndexed { idx, lens ->
-            var slot = idx + 1
+    override fun part2() = input.fold(Array(256) { mutableMapOf<String, Int>() }) { acc, str ->
+        val (id, focalLength) = str.split('=', '-')
+        if (str.contains('-')) { acc[hash(id)] -= id }
+        else { acc[hash(id)][id] = focalLength.toInt() }
+        acc
+    }.withIndex().sumOf { (idx, entry) ->
+        entry.values.withIndex().sumOf { (slot, lens) ->
             //println(boxNr * slot * lens.focalLength)
-            boxNr * slot * lens.focalLength
-        }.sum()
-    }.sum())
-
+            (idx + 1) * (slot + 1) * lens
+        }
+    }.apply { println(this) }
 }
+
+
