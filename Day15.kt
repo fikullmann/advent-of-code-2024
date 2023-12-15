@@ -3,15 +3,16 @@ import java.io.File
 fun main() {
     Day15.part1().let(::println)
     Day15.part2().let(::println)
+    Day15.solve().let(::println)
 }
-object Day15: Day() {
+object Day15: Day<Int, Int>() {
     val input = File("input/15").readLines()[0].split(',')
 
     private fun hash(str: String): Int = str.fold(0) { acc, ch ->
             (acc + ch.code) * 17 % 256
         }
 
-    override fun part1():Int {
+    override fun part1(): Int {
         val results = mutableListOf<Int>()
         input.forEach { str ->
             results.add(hash(str))
@@ -25,10 +26,7 @@ object Day15: Day() {
         acc
     }.withIndex().sumOf { (idx, entry) ->
         entry.values.withIndex().sumOf { (slot, lens) ->
-            //println(boxNr * slot * lens.focalLength)
             (idx + 1) * (slot + 1) * lens
         }
-    }.apply { println(this) }
+    }
 }
-
-
