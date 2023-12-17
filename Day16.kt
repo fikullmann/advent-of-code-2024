@@ -8,7 +8,7 @@ fun main() {
     Day16.solve().let(::println)
 }
 
-object Day16: Day<Any?, Int>() {
+object Day16: Day<Int, Int>() {
     /**
      * parsed input as 2d array of contraption layout
      */
