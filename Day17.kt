@@ -4,7 +4,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 fun main() {
-    Day17.part2().let(::println)
+    Day17.solve().let(::println)
 }
 
 object Day17 : Day<Int, Int>() {
@@ -15,10 +15,16 @@ object Day17 : Day<Int, Int>() {
         str.map { ch -> ch.digitToInt() }
     }
 
-    private val costMap = mutableMapOf<HeatLoss, Int>().withDefault { Int.MAX_VALUE }
-    private val unvisited = PriorityQueue<Cost>(compareBy { it.cost })
+    private var costMap = mutableMapOf<HeatLoss, Int>().withDefault { Int.MAX_VALUE }
+    private var unvisited = PriorityQueue<Cost>(compareBy { it.cost })
 
-    override fun part1(): Int {
+    override fun part1(): Int = dijkstra(1, 3)
+
+    override fun part2(): Int = dijkstra(4, 10)
+
+    fun dijkstra(min: Int, max: Int): Int {
+        costMap = mutableMapOf<HeatLoss, Int>().withDefault { Int.MAX_VALUE }
+        unvisited = PriorityQueue<Cost>(compareBy { it.cost })
         listOf( HeatLoss(0 to 0, Dir.EAST, 0),
                 HeatLoss(0 to 0, Dir.SOUTH, 0)
         ).forEach { hl ->
@@ -26,42 +32,14 @@ object Day17 : Day<Int, Int>() {
             costMap[hl] = 0
         }
         val endIndex = (hlLayout.size - 1) to (hlLayout[0].size - 1)
-        //println(endIndex.first * endIndex.second)
-        var i = 0
         while (unvisited.isNotEmpty()) {
-            if (i % 1000 == 0) println(i)
-            i++
+
             val currNode = unvisited.poll()
             if (currNode.hl.idx == endIndex) {
                 return currNode.cost
             }
             if (costMap[currNode.hl] == currNode.cost) {
-                step(currNode, 0, 3)
-            }
-        }
-        return 0
-    }
-
-    override fun part2(): Int {
-
-        listOf( HeatLoss(0 to 0, Dir.EAST, 0),
-                HeatLoss(0 to 0, Dir.SOUTH, 0)
-        ).forEach { hl ->
-            unvisited.add(Cost(hl, 0))
-            costMap[hl] = 0
-        }
-        val endIndex = (hlLayout.size - 1) to (hlLayout[0].size - 1)
-        //println(endIndex.first * endIndex.second)
-        var i = 0
-        while (unvisited.isNotEmpty()) {
-            if (i % 1000 == 0) println(i)
-            i++
-            val currNode = unvisited.poll()
-            if (currNode.hl.idx == endIndex) {
-                return currNode.cost
-            }
-            if (costMap[currNode.hl] == currNode.cost) {
-                step(currNode, 4, 10)
+                step(currNode, min, max)
             }
         }
         return 0
@@ -76,8 +54,6 @@ object Day17 : Day<Int, Int>() {
                 unvisited.add(Cost(hl, cost))
             }
         }
-        // for each direction -> find other eligble directions
-        // add next nodes to unvisited
     }
 
     fun calculateCost(hlFrom: HeatLoss, hlTo: HeatLoss): Int? {
@@ -96,43 +72,6 @@ object Day17 : Day<Int, Int>() {
             } - hlLayout[hlFrom.idx.first][hlFrom.idx.second]
         }
         return null
-    }
-
-    private fun validIdx(idx: Pair<Int, Int>): Boolean =
-            idx.first in hlLayout.indices && idx.second in hlLayout.first().indices
-
-    private fun mapDir2(idx: Pair<Int, Int>, min: Int, dir: Dir) {
-        var distance = 0
-        for (i in 1..3) {
-            var resultIdx = when (dir) {
-                Dir.NORTH -> (-i to 0)
-                Dir.WEST -> (0 to -i)
-                Dir.SOUTH -> (i to 0)
-                Dir.EAST -> (0 to i)
-            }
-            resultIdx = (resultIdx.first + idx.first) to (resultIdx.second + idx.second)
-            if (resultIdx.first in hlLayout.indices && resultIdx.second in hlLayout[0].indices) {
-                distance += hlLayout[resultIdx.first][resultIdx.second]
-            }
-        }
-        for (i in 4..10) {
-            var resultIdx = when (dir) {
-                Dir.NORTH -> (-i to 0)
-                Dir.WEST -> (0 to -i)
-                Dir.SOUTH -> (i to 0)
-                Dir.EAST -> (0 to i)
-            }
-            resultIdx = (resultIdx.first + idx.first) to (resultIdx.second + idx.second)
-            if (resultIdx.first in hlLayout.indices && resultIdx.second in hlLayout[0].indices) {
-                distance += hlLayout[resultIdx.first][resultIdx.second]
-                val newHL = HeatLoss(resultIdx, dir, i)
-                val existingCost = costMap[newHL] ?: Int.MAX_VALUE// if already visited we don't need to visit again
-                if (existingCost > distance + min) {
-                    costMap[newHL] = distance + min
-                    unvisited.add(Cost(newHL, distance + min))
-                }
-            }
-        }
     }
 
     data class Cost(
