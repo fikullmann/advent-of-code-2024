@@ -1,9 +1,7 @@
 import java.io.File
-import kotlin.math.max
-import kotlin.math.min
 
 fun main() {
-    Day19.part2().let(::println)
+    Day19.solve().let(::println)
 }
 
 object Day19 : Day<Long, Long>() {
@@ -29,6 +27,10 @@ object Day19 : Day<Long, Long>() {
 
 
     override fun part1(): Long = xmas.fold(0L) { acc, xmasPart ->
+        // take first value of in
+        // iterate: calcDestination
+        // if true -> check for second value, if A or R finish
+        // if other -> search in workflow and go in next iteration
         var value = 0L
         var workList: MutableList<Pair<String, String>> = workflows["in"]?.toMutableList()!!
         while (workList.isNotEmpty()) {
@@ -36,39 +38,31 @@ object Day19 : Day<Long, Long>() {
             if (xmasPart.calculateDestination(curr.first)) {
                 val dest = curr.second
                 when (dest) {
-                    "A" -> {
-                        value = xmasPart.value(); break
-                    }
-
+                    "A" -> { value = xmasPart.value(); break }
                     "R" -> break
-                    else -> {
-                        workList = workflows[curr.second]?.toMutableList()!!
-                    }
+                    else -> { workList = workflows[curr.second]?.toMutableList()!! }
                 }
             }
         }
         acc + value
-        // take first value of in, calc Desination
-        // if true -> check for second value, if A or R finish, if other search in workflow and go in next iteration
     }
 
     override fun part2(): Long {
         // start with in
-        // create node for in with worklist and valid ranges
-        // oder x: 0 to 4000 etc.
-        // for each part:
-        //
+        // create node for "in" with worklist and valid ranges
+        // x = 1 to 4000 etc. (inclusive ranges)
+        // let node create next nodes
+        // iterate until find A or R
         val nodes = mutableListOf(XMASNode("in", 1 to 4000, 1 to 4000, 1 to 4000, 1 to 4000))
         var value = 0L
         while (nodes.isNotEmpty()) {
             val curr = nodes.removeFirst()
             when (curr.name) {
-                "A" -> value += curr.value()
+                "A" -> value += curr.combinations()
                 "R" -> value += 0L
                 else -> nodes.addAll(curr.createNext())
             }
         }
-
         return value
     }
 
@@ -86,8 +80,9 @@ object Day19 : Day<Long, Long>() {
             var aNew = a
             var sNew = s
             while (workList.isNotEmpty()) {
-                //"s < 1351"
-                //"a > 1761"
+                // find restriction & create new node with goal
+                // for every succeeding part, take opposite of previous restriction as additional restriction
+                // for s < 1351:
                 // create object where everything is the same but second of s = 1350
                 // continue with configuration where s.first = 1351 and do same thing for next limit is corrected
                 val curr = workList.removeFirst()
@@ -97,30 +92,22 @@ object Day19 : Day<Long, Long>() {
                 var sNext = sNew
                 if (curr.first.isNotEmpty()) {
                     val value = curr.first.drop(2).toInt()
-                    var first: Int? = null
-                    var second: Int? = null
                     when (curr.first[1]) {
-                        '>' -> first = value
-                        '<' -> second = value
-                    }
-                    when (curr.first[0]) {
-                        'x' -> {
-                            //xNext = first?.let { it+1 to xNew.second } ?: second?.let { xNew.first to it-1 }!!
-                            xNext = max(xNew.first, (first ?: -1)+1) to min(xNew.second, (second ?: 4001)-1)
-                            xNew = max(xNew.first, second ?: 0) to min(xNew.second, first ?: 4000)
+                        '>' -> {
+                            when (curr.first[0]) {
+                                'x' -> { xNext = value + 1 to xNew.second; xNew = xNew.first to value }
+                                'm' -> { mNext = value + 1 to mNew.second; mNew = mNew.first to value }
+                                'a' -> { aNext = value + 1 to aNew.second; aNew = aNew.first to value }
+                                's' -> { sNext = value + 1 to sNew.second; sNew = sNew.first to value }
+                            }
                         }
-                        'm' -> {
-
-                            mNext = max(mNew.first,  (first ?: -1)+1) to min(mNew.second, (second ?: 4001)-1)
-                            mNew = max(mNew.first, second ?: 0) to min(mNew.second, first ?: 4000)
-                        }
-                        'a' -> {
-                            aNext = max(aNew.first,  (first ?: -1)+1) to min(aNew.second, (second ?: 4001)-1)
-                            aNew = max(aNew.first, second ?: 0) to min(aNew.second, first ?: 4000)
-                        }
-                        's' -> {
-                            sNext = max(sNew.first,  (first ?: -1)+1) to min(sNew.second, (second ?: 4001)-1)
-                            sNew = max(sNew.first, second ?: 0) to min(sNew.second, first ?: 4000)
+                        '<' -> {
+                            when (curr.first[0]) {
+                                'x' -> { xNext = xNew.first to value -1; xNew = value to xNew.second }
+                                'm' -> { mNext = mNew.first to value -1; mNew = value to mNew.second }
+                                'a' -> { aNext = aNew.first to value -1; aNew = value to aNew.second }
+                                's' -> { sNext = sNew.first to value -1; sNew = value to sNew.second }
+                            }
                         }
                     }
                     add(XMASNode(curr.second, xNext, mNext, aNext, sNext))
@@ -128,15 +115,17 @@ object Day19 : Day<Long, Long>() {
                     add(copy(name = curr.second, x = xNew, m = mNew, a=aNew, s=sNew))
                 }
             }
-            // find restriction & create new node with goal
-            // for every succeeding part, take opposite of previous restriction as additional restriction
         }
 
-        fun value(): Long = (x.size() * m.size() * a.size() * s.size())
+        fun combinations(): Long = (x.size() * m.size() * a.size() * s.size())
         private fun Pair<Int, Int>.size() = ((this.second - first) + 1).toLong()
     }
 
     data class XMASPart(val x: Int, val m: Int, val a: Int, val s: Int) {
+        /**
+         * for a given rating such as: "s < 1351" returns whether the current XMAS part adheres to the rule
+         * if there's no rule: "", returns true
+         */
         fun calculateDestination(rating: String): Boolean {
             if (rating.isEmpty()) return true
             var toCheck = 0
