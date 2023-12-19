@@ -11,14 +11,6 @@ fun main() {
         total += (value[0] +"" + value[value.length - 1]).toInt()
     }
     println(total)
-/*    File("1")
-            .readLines().sumOf {
-                val value = ""
-                val digitIter = it.filter { ch -> ch.isDigit() }.map { ch -> ch.digitToInt() }
-                val first = digitIter.first()
-                val last = digitIter.last()
-                first * 10 + last
-            }*/
 }
 
 fun matchDigit(string: String): String {
