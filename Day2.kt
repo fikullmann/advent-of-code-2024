@@ -1,51 +1,24 @@
 import java.io.File
 
 fun main() {
-    task2()
+    Day2.solve().let(::println)
 }
 
-fun task1() {
-    val redLimit = 12
-    val blueLimit = 14
-    val greenLimit = 13
-    var sum = 0
-    File("input/2").forEachLine {
-        var possible = true
-        val listOfStrings = it.split(": ", "; ", ", ")
-        for (i in 1..<listOfStrings.size) {
-            listOfStrings[i].apply {
-                        when {
-                            "red" in this -> possible = possible && (this.dropLast(4).toInt() <= redLimit)
-                            "blue" in this -> possible = possible && (this.dropLast(5).toInt() <= blueLimit)
-                            "green" in this -> possible = possible && (this.dropLast(6).toInt() <= greenLimit)
-                        }
-                    }
-        }
-        if (possible) {
-            sum += listOfStrings[0].drop(5).toInt()
-        }
+object Day2 : Day<Int, Int>() {
+    private val limit = listOf(12, 13, 14)
+    val input = File("input/2").readLines().mapIndexed {idx, str ->
+        val listOfStrings = str.split(": ", "; ", ", ")
+        (idx+1) to listOf(listOfStrings.filter { "red" in it }.maxOfOrNull { it.dropLast(4).toInt() } ?: Int.MAX_VALUE,
+                listOfStrings.filter { "green" in it }.maxOfOrNull { it.dropLast(6).toInt() } ?: Int.MAX_VALUE,
+                listOfStrings.filter { "blue" in it }.maxOfOrNull { it.dropLast(5).toInt() } ?: Int.MAX_VALUE)
     }
-    println(sum)
-}
 
-fun task2() {
-    var sum = 0
-    File("input/2").forEachLine {
-        val listOfStrings = it.split(": ", "; ", ", ")
-        var redLimit = 0
-        var blueLimit = 0
-        var greenLimit = 0
-        for (i in 1..<listOfStrings.size) { // Game Analysis
-            listOfStrings[i].apply {
-                when {
-                    "red" in this -> redLimit = kotlin.math.max(this.dropLast(4).toInt(), redLimit)
-                    "blue" in this -> blueLimit = kotlin.math.max(this.dropLast(5).toInt(), blueLimit)
-                    "green" in this -> greenLimit = kotlin.math.max(this.dropLast(6).toInt(), greenLimit)
-                }
-            }
+    override fun part1(): Int = input.fold(0) { acc, put ->
+            val list = put.second
+            acc + if ((list[0] <= limit[0]) && (list[1] <= limit[1]) && (list[2] <= limit[2])) put.first else 0
         }
-        println(redLimit * blueLimit * greenLimit)
-        sum += (redLimit * blueLimit * greenLimit)
+
+    override fun part2(): Int = input.fold(0) { acc, listPair ->
+        acc + (listPair.second[0] * listPair.second[1] * listPair.second[2])
     }
-    println(sum)
 }
