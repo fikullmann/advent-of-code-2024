@@ -5,6 +5,16 @@ operator fun Int.times(o: Pair<Int, Int>) = this *o.first to this * o.second
 
 
 // this part is from stackoverflow OWO help
+private fun gcd(a: Long, b: Long): Long {
+    var a = a
+    var b = b
+    while (b > 0) {
+        val temp = b
+        b = a % b // % is remainder
+        a = temp
+    }
+    return a
+}
 fun gcd(input: List<Long>): Long {
     var result = input[0]
     for (i in 1 until input.size) result = gcd(result, input[i])
