@@ -178,7 +178,4 @@ class Connector(private val lines: List<String>) {
 }
 
 
-enum class Dir {
-    NORTH, SOUTH, EAST, WEST
-}
 
