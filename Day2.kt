@@ -14,9 +14,9 @@ object Day2 : Day<Int, Int>() {
     }
 
     override fun part1(): Int = input.fold(0) { acc, put ->
-            val list = put.second
-            acc + if ((list[0] <= limit[0]) && (list[1] <= limit[1]) && (list[2] <= limit[2])) put.first else 0
-        }
+        val list = put.second
+        acc + if ((list[0] <= limit[0]) && (list[1] <= limit[1]) && (list[2] <= limit[2])) put.first else 0
+    }
 
     override fun part2(): Int = input.fold(0) { acc, listPair ->
         acc + (listPair.second[0] * listPair.second[1] * listPair.second[2])
