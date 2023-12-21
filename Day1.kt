@@ -1,7 +1,7 @@
 import java.io.File
 
 fun main() {
-    Day1.part2().let(::println)
+    Day1.solve().let(::println)
 }
 
 object Day1 : Day<Int, Int>() {
