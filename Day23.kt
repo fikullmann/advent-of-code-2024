@@ -3,7 +3,7 @@ import java.util.PriorityQueue
 import kotlin.math.max
 
 fun main() {
-    Day23.part2().let(::println)
+    Day23.solve().let(::println)
 }
 
 object Day23 : Day<Int, Int>() {
@@ -27,11 +27,11 @@ object Day23 : Day<Int, Int>() {
         lSize = garden.keys.maxOf { it.first }
         cSize = garden.keys.maxOf { it.second }
     }
+    private val endIdx = lSize to cSize - 1
 
     override fun part1(): Int {
-        val workList: MutableList<StepWVisited> = mutableListOf(StepWVisited(0 to 1, Dir.NORTH, 0))
+        val workList: MutableList<Step> = mutableListOf(Step(0 to 1, Dir.NORTH, 0))
         var max = 0
-        val endIdx = lSize to cSize - 1
         while (workList.isNotEmpty()) {
             val curr = workList.removeFirst()
             if (curr.idx == endIdx) {
@@ -47,7 +47,6 @@ object Day23 : Day<Int, Int>() {
 
     override fun part2(): Int {
 
-        val endIdx = lSize to cSize - 1
         idxCrossing[0 to 1] = Crossing(0 to 1)
         idxCrossing[endIdx] = Crossing(endIdx)
         val workList: MutableList<Pair<Crossing, Dir>> = mutableListOf(
@@ -58,10 +57,10 @@ object Day23 : Day<Int, Int>() {
         // build condensed graph of Crossings
         while (workList.isNotEmpty()) {
             val (curr, dir) = workList.removeFirst()
-            var crossList = Step2(curr.idx, dir, 0).nextSteps().toMutableList()
+            val crossList = Step(curr.idx, dir, 0).nextStepsIgnoreSteeps().toMutableList()
             while (crossList.isNotEmpty()) {
                 val currPath = crossList.removeFirst()
-                if (currPath.nextSteps().size > 1) {
+                if (currPath.nextStepsIgnoreSteeps().size > 1) {
                     if (!idxCrossing.containsKey(currPath.idx)) {
                         val newCrossing = curr.connectNew(currPath.idx, currPath.distance)
                         idxCrossing[currPath.idx] = newCrossing
@@ -70,14 +69,14 @@ object Day23 : Day<Int, Int>() {
                         curr.connect(idxCrossing[currPath.idx]!!, currPath.distance)
                     }
                 } else {
-                    currPath.nextSteps().firstOrNull()?.let { crossList.add(0, it) }
+                    currPath.nextStepsIgnoreSteeps().firstOrNull()?.let { crossList.add(0, it) }
                 }
             }
         }
 
         // now: dijkstra
-        val longestPathList: PriorityQueue<StepWVisited> = PriorityQueue(compareByDescending { it.distance })
-        longestPathList.add(StepWVisited(0 to 1, Dir.NORTH, 0))
+        val longestPathList: PriorityQueue<Step> = PriorityQueue(compareByDescending { it.distance })
+        longestPathList.add(Step(0 to 1, Dir.NORTH, 0))
         var max = 0
         while (longestPathList.isNotEmpty()) {
             val curr = longestPathList.poll()
@@ -109,54 +108,32 @@ object Day23 : Day<Int, Int>() {
             }
         }
     }
-    data class Step2(
-            val idx: Pair<Int, Int>,
-            val dir: Dir,
-            val distance: Int = 0,
-    ) {
 
-        fun nextSteps(): List<Step2> = buildList {
-            val dist = distance +1
-            //val vis = visited.toMutableMap()
-            //visited[idx] = 1
-            when (garden[idx]) {
-                Trails.FOREST -> Unit
-                else -> {
-                    if (dir != Dir.EAST) add(Step2(idx + (0 to 1), Dir.WEST, dist))
-                    if (dir != Dir.WEST) add(Step2(idx + (0 to -1), Dir.EAST, dist))
-                    if (dir != Dir.SOUTH) add(Step2(idx + (1 to 0), Dir.NORTH, dist))
-                    if (dir != Dir.NORTH) add(Step2(idx + (-1 to 0), Dir.SOUTH, dist))
-                }
-            }
-        }.filter { newStep ->
-            garden[newStep.idx] != Trails.FOREST && newStep.idx.first in 0..lSize && newStep.idx.second in 0..cSize
-        }
-    }
 
-    data class StepWVisited(
+    data class Step(
             val idx: Pair<Int, Int>,
             val dir: Dir,
             val distance: Int = 0,
             private val visited: MutableMap<Pair<Int, Int>, Int> = mutableMapOf<Pair<Int, Int>, Int>().withDefault { 0 },
     ) {
 
-        fun nextSteps(): List<StepWVisited> = buildList {
+        fun nextSteps(): List<Step> = buildList {
             val dist = distance + 1
             val vis = visited.toMutableMap()
             vis[idx] = 1
             when (garden[idx]) {
                 Trails.FOREST -> Unit
                 Trails.PATH -> {
-                    add(StepWVisited(idx + (0 to 1), Dir.WEST, dist, vis))
-                    add(StepWVisited(idx + (0 to -1), Dir.EAST, dist, vis))
-                    add(StepWVisited(idx + (1 to 0), Dir.NORTH, dist, vis))
-                    add(StepWVisited(idx + (-1 to 0), Dir.SOUTH, dist, vis))
+                    add(Step(idx + (0 to 1), Dir.WEST, dist, vis))
+                    add(Step(idx + (0 to -1), Dir.EAST, dist, vis))
+                    add(Step(idx + (1 to 0), Dir.NORTH, dist, vis))
+                    add(Step(idx + (-1 to 0), Dir.SOUTH, dist, vis))
                 }
 
-                Trails.NSLOPE -> add(StepWVisited(idx + (-1 to 0), Dir.SOUTH, dist, vis))
-                Trails.SSLOPE -> add(StepWVisited(idx + (1 to 0), Dir.NORTH, dist, vis))
-                Trails.WSLOPE -> add(StepWVisited(idx + (0 to -1), Dir.EAST, dist, vis))
-                Trails.ESLOPE -> add(StepWVisited(idx + (0 to 1), Dir.WEST, dist, vis))
+                Trails.NSLOPE -> add(Step(idx + (-1 to 0), Dir.SOUTH, dist, vis))
+                Trails.SSLOPE -> add(Step(idx + (1 to 0), Dir.NORTH, dist, vis))
+                Trails.WSLOPE -> add(Step(idx + (0 to -1), Dir.EAST, dist, vis))
+                Trails.ESLOPE -> add(Step(idx + (0 to 1), Dir.WEST, dist, vis))
                 null -> Unit
             }
         }.filter { newStep ->
@@ -164,13 +141,30 @@ object Day23 : Day<Int, Int>() {
                     && visited[newStep.idx] != 1
         }
 
-        fun nextNode(): List<StepWVisited> = buildList {
+        fun nextStepsIgnoreSteeps(): List<Step> = buildList {
+            val dist = distance +1
+            //val vis = visited.toMutableMap()
+            //visited[idx] = 1
+            when (garden[idx]) {
+                Trails.FOREST -> Unit
+                else -> {
+                    if (dir != Dir.EAST) add(Step(idx = idx + (0 to 1), dir = Dir.WEST, distance = dist))
+                    if (dir != Dir.WEST) add(Step(idx = idx + (0 to -1), dir = Dir.EAST, distance = dist))
+                    if (dir != Dir.SOUTH) add(Step(idx = idx + (1 to 0), dir = Dir.NORTH, distance = dist))
+                    if (dir != Dir.NORTH) add(Step(idx = idx + (-1 to 0), dir = Dir.SOUTH, distance = dist))
+                }
+            }
+        }.filter { newStep ->
+            garden[newStep.idx] != Trails.FOREST && newStep.idx.first in 0..lSize && newStep.idx.second in 0..cSize
+        }
+
+        fun nextNode(): List<Step> = buildList {
             val currCrossing = idxCrossing[idx]!!
             val vis = visited.toMutableMap()
             vis[idx] = 1
             currCrossing.connections.forEach { (crossing, dist) ->
                 if (!vis.contains(crossing.idx)) {
-                    add(StepWVisited(crossing.idx, Dir.NORTH, distance + dist, vis))
+                    add(Step(crossing.idx, Dir.NORTH, distance + dist, vis))
                 }
             }
         }
