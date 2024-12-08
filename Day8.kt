@@ -8,14 +8,12 @@ fun main() {
 
 object Day8 : Day<Int, Int>() {
     val lines = File("input/8").readLines()
+
     val locationMap: MutableMap<Char, MutableList<Location>> = buildMap<Char, MutableList<Location>> {
         lines.forEachIndexed { rowNr, row ->
             row.forEachIndexed { colNr, char ->
                 if (char != '.') {
-                    if (this[char] == null) {
-                        this[char] = mutableListOf()
-                    }
-                    this[char]?.add(Location(rowNr, colNr))
+                    this.getOrPut(char, ::mutableListOf ).add(Location(rowNr, colNr))
                 }
             }
         }
@@ -32,7 +30,7 @@ object Day8 : Day<Int, Int>() {
                 antinodeLocation.add(loc1.applyDistance(distance, 2))
             }
         }
-        return antinodeLocation.filter { (row, col) -> row >= 0 && row < maxRow && col >= 0 && col < maxCol }.count()
+        return antinodeLocation.count { (row, col) -> row in 0..<maxRow && col in 0..<maxCol }
     }
 
     override fun part2(): Int {
