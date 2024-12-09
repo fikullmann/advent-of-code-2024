@@ -55,14 +55,6 @@ object Day8 : Day<Int, Int>() {
     }
 }
 
-
-data class Location(val row: Int, val col: Int) {
-    fun distance(other: Location): Distance = Distance(row - other.row, col - other.col)
-
-    fun applyDistance(other: Distance, n: Int = 1): Location =
-        Location(row = row + other.row * n, col = col + other.col * n)
-
-}
 data class Distance(val row: Int, val col: Int)
 
 

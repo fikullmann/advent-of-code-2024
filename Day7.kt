@@ -1,14 +1,15 @@
 import java.io.File
-import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log
+import kotlin.math.pow
 
 fun main() {
+    //Day7.part1().let(::println)
+    //Day7.part2().let(::println)
     Day7.solve().let(::println)
 }
 
 object Day7 : Day<Long, Long>() {
-    var concat: Boolean = false
     val regex = Regex("\\d+")
     val lines = File("input/7").readLines()
     private val linesOfMatches = lines.map { line ->
@@ -16,57 +17,28 @@ object Day7 : Day<Long, Long>() {
     }
 
     override fun part1(): Long = linesOfMatches.sumOf { matches ->
-            val lineResult = matches[0]
+        if (opRec(matches[1], matches.reversed().dropLast(2), matches[0], listOf(plusL, multL))) {
+            matches[0]
+        } else 0
+    }
 
-            if (plusRec(matches[1], matches.reversed().dropLast(2).toMutableList(), lineResult) ||
-            plusMult(matches[1], matches.reversed().dropLast(2).toMutableList(), lineResult)) {
-                lineResult
-            } else 0
-        }
-
-    private fun plusRec(first: Long, rest: List<Long>, result: Long): Boolean {
+    fun opRec(first: Long, rest: List<Long>, result: Long, functions: List<(Long, Long) -> Long>) : Boolean {
         if (first > result) return false
         if (rest.isEmpty()) {
             return if (first == result) true else false
         }
-        val x = first + rest.last()
-        return plusRec(x, rest.dropLast(1), result) ||
-                plusMult(x, rest.dropLast(1), result) ||
-                (if (concat) plusConcat(x, rest.dropLast(1), result) else false)
-    }
-    private fun plusMult(first: Long, rest: List<Long>, result: Long): Boolean {
-        if (first > result) return false
-        if (rest.isEmpty()) {
-            return if (first == result) true else false
+        return functions.any { fn ->
+            opRec(fn(first, rest.last()), rest.dropLast(1), result, functions)
         }
-        val x = first * rest.last()
-        return plusRec(x, rest.dropLast(1), result) ||
-                plusMult(x, rest.dropLast(1), result) ||
-                (if (concat) plusConcat(x, rest.dropLast(1), result) else false)
-    }
-    private fun plusConcat(first: Long, rest: List<Long>, result: Long): Boolean {
-        if (first > result) return false
-        if (rest.isEmpty()) {
-            return if (first == result) true else false
-        }
-        val x = first * Math.pow(10.0, floor(log(rest.last().toDouble(), 10.0))+1).toLong() + rest.last()
-        return plusRec(x, rest.dropLast(1), result) ||
-                plusMult(x, rest.dropLast(1), result) ||
-                (if (concat) plusConcat(x, rest.dropLast(1), result) else false)
     }
 
+    val plusL = { fst: Long, snd: Long -> fst + snd }
+    val multL = { fst: Long, snd: Long -> fst * snd }
+    val concatL = { fst: Long, snd: Long -> fst * 10.0.pow(snd.length().toDouble()).toLong() + snd }
 
-    override fun part2(): Long {
-        concat = true
-        return linesOfMatches.sumOf { matches ->
-            val lineResult = matches[0]
-
-            if (plusRec(matches[1], matches.reversed().dropLast(2).toMutableList(), lineResult) ||
-                plusMult(matches[1], matches.reversed().dropLast(2).toMutableList(), lineResult) ||
-                plusConcat(matches[1], matches.reversed().dropLast(2).toMutableList(), lineResult)
-            ) {
-                lineResult
-            } else 0
-        }
+    override fun part2(): Long = linesOfMatches.sumOf { matches ->
+        if (opRec(matches[1], matches.reversed().dropLast(2), matches[0], listOf(plusL, multL, concatL))) {
+            matches[0]
+        } else 0
     }
 }
