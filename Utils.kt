@@ -39,6 +39,12 @@ fun lcm(input: List<Long>): Long {
     return result
 }
 data class Location(val row: Int, val col: Int) {
+    fun left() = Location(row, col - 1)
+    fun right() = Location(row, col + 1)
+    fun up() = Location(row - 1, col)
+    fun down() = Location(row + 1, col)
+
+
     fun distance(other: Location): Distance = Distance(row - other.row, col - other.col)
 
     fun applyDistance(other: Distance, n: Int = 1): Location =
