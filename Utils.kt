@@ -11,6 +11,18 @@ fun distance(i:Int, j: Int) = abs(i - j)
 enum class Dir {
     NORTH, SOUTH, EAST, WEST
 }
+enum class Direction(row: Int, col: Int) {
+    UP(-1,0), DOWN(1, 0), LEFT(0, -1), RIGHT(0, 1);
+
+    fun ninetyDegree(): Direction {
+        when (this) {
+            UP -> return RIGHT
+            DOWN -> return LEFT
+            LEFT -> return UP
+            RIGHT -> return DOWN
+        }
+    }
+}
 
 // this part is from stackoverflow OWO help
 private fun gcd(a: Long, b: Long): Long {
@@ -57,4 +69,8 @@ data class Location(val row: Int, val col: Int) {
 fun Long.length() = when(this) {
     0L -> 1L
     else -> log10(abs(toDouble())).toLong() + 1
+}
+fun Long.lengthInt() = when(this) {
+    0L -> 1
+    else -> log10(abs(toDouble())).toInt() + 1
 }
