@@ -22,6 +22,15 @@ enum class Direction(row: Int, col: Int) {
             RIGHT -> return DOWN
         }
     }
+
+    fun applyTo(loc: Location): Location {
+        when (this@Direction) {
+            UP -> return loc.up()
+            DOWN -> return loc.down()
+            LEFT -> return loc.left()
+            RIGHT -> return loc.right()
+        }
+    }
 }
 
 // this part is from stackoverflow OWO help

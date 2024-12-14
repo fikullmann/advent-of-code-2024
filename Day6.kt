@@ -1,10 +1,8 @@
 import java.io.File
 
 fun main() {
-    Day6.part1().let (::println)
-    //Day10.part1("10_test2").let (::println)
-    //Day10.part1("10_test3").let (::println)
-    //Day10.part2().let (::println)
+    //Day6.part1().let (::println)
+    Day6.part2().let (::println)
 }
 
 object Day6 : Day<Int, Int>() {
@@ -24,12 +22,7 @@ object Day6 : Day<Int, Int>() {
         val positions = mutableSetOf<Location>()
         for (i in 0..200000000) {
             positions.add(guardLoc)
-            val newLoc = when (direction) {
-                Direction.UP -> guardLoc.up()
-                Direction.DOWN -> guardLoc.down()
-                Direction.LEFT -> guardLoc.left()
-                Direction.RIGHT -> guardLoc.right()
-            }
+            val newLoc = direction.applyTo(guardLoc)
             if (!newLoc.isInside(maxLine, maxCol)) break
             if (input[newLoc] == '#') {
                 direction = direction.ninetyDegree()
@@ -44,6 +37,53 @@ object Day6 : Day<Int, Int>() {
 
 
     override fun part2(): Int {
-TODO()
+        var guardOriginal = Location(0,0)
+        input.forEachIndexed { rowIdx, row ->
+            val colIdx = row.indexOfFirst { col -> col == '^' }
+            if (colIdx >= 0) guardOriginal = Location(rowIdx, colIdx)
+        }
+
+        var guardLoc = guardOriginal
+        var direction = Direction.UP
+        val positions = mutableSetOf<Location>()
+        for (i in 0..200000000) {
+            positions.add(guardLoc)
+            val newLoc = direction.applyTo(guardLoc)
+            if (!newLoc.isInside(maxLine, maxCol)) break
+            if (input[newLoc] == '#') {
+                direction = direction.ninetyDegree()
+            } else {
+                guardLoc = newLoc
+            }
+        }
+
+        var sum = 0
+        positions.drop(1).forEach { adjloc ->
+            val adjInput = input.map { it.clone() }.toMutableList()
+            adjInput[adjloc.row][adjloc.col] = '#'
+
+            guardLoc = guardOriginal
+            direction = Direction.UP
+            val landmarks = mutableSetOf<Pair<Location, Direction>>(guardLoc to direction)
+            var newLandmark = Location(0, 0) to Direction.UP
+            for (i in 0..200000000) {
+                positions.add(guardLoc)
+                val newLoc = direction.applyTo(guardLoc)
+                if (!newLoc.isInside(maxLine, maxCol)) break
+                if (adjInput[newLoc] == '#') {
+                    direction = direction.ninetyDegree()
+                    newLandmark = guardLoc to direction
+                } else {
+                    guardLoc = newLoc
+                }
+                if (landmarks.contains(guardLoc to direction)) {
+                    sum += 1
+                    break
+                }
+                landmarks.add(newLandmark)
+            }
+        }
+        return sum
+        // for each position adjusted
     }
 }
